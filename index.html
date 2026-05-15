@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote Poster Generator</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:900px;margin:20px auto;padding:20px;background:#f5f5f5}
+.container{display:grid;grid-template-columns:320px 1fr;gap:20px}
+.controls{background:white;padding:16px;border-radius:12px}
+label{display:block;margin-top:10px;font-weight:bold}
+textarea,input{width:100%;margin-top:5px;padding:8px}
+canvas{background:white;border:1px solid #ddd;max-width:100%}
+button{margin-top:15px;padding:10px 16px}
+</style>
+</head>
+<body>
+<h2>Quote Poster Generator</h2>
+<div class="container">
+<div class="controls">
+<label>Quote</label><textarea id="quote" rows="5"></textarea>
+<label>Author</label><input id="author">
+<label>Main Portrait</label><input type="file" id="mainImg" accept="image/*">
+<label>Bottom Image</label><input type="file" id="bottomImg" accept="image/*">
+<button onclick="generate()">Generate</button>
+<button onclick="downloadImg()">Download</button>
+</div>
+<div><canvas id="canvas" width="800" height="1000"></canvas></div>
+</div>
+<script>
+const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+let img1=null,img2=null;
+function loadFile(input, cb){
+ const f=input.files[0]; if(!f) return;
+ const r=new FileReader();
+ r.onload=e=>{const i=new Image(); i.onload=()=>cb(i); i.src=e.target.result;};
+ r.readAsDataURL(f);
+}
+document.getElementById('mainImg').onchange=e=>loadFile(e.target, i=>img1=i);
+document.getElementById('bottomImg').onchange=e=>loadFile(e.target, i=>img2=i);
+function wrapText(text,x,y,maxWidth,lineHeight){
+ const words=text.split(' '); let line='';
+ for(let n=0;n<words.length;n++){
+  let test=line+words[n]+' ';
+  if(ctx.measureText(test).width>maxWidth && n>0){ ctx.fillText(line,x,y); line=words[n]+' '; y+=lineHeight; }
+  else line=test;
+ }
+ ctx.fillText(line,x,y);
+}
+function generate(){
+ ctx.fillStyle='white'; ctx.fillRect(0,0,800,1000);
+ ctx.fillStyle='#f7f7f7'; ctx.fillRect(0,0,800,780);
+ if(img2) ctx.drawImage(img2,0,780,400,220);
+ if(img1) ctx.drawImage(img1,460,430,300,420);
+ ctx.fillStyle='black'; ctx.font='bold 48px sans-serif';
+ wrapText(document.getElementById('quote').value,60,150,420,60);
+ ctx.font='bold 36px sans-serif';
+ ctx.fillText(document.getElementById('author').value,60,650);
+}
+function downloadImg(){
+ const a=document.createElement('a');
+ a.download='poster.png'; a.href=c.toDataURL(); a.click();
+}
+generate();
+</script>
+</body>
+</html>
